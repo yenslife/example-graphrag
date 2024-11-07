@@ -1,7 +1,7 @@
 from openai import OpenAI
 import networkx as nx
 from cdlib import algorithms
-import os
+import os, time
 from dotenv import load_dotenv
 from constants import DOCUMENTS
 from graph_vis import visualize_graph
@@ -10,6 +10,13 @@ load_dotenv()
 
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
+# 日誌記錄函式
+def log_output(message, log_file="log.txt"):
+    print(message)
+    with open(log_file, 'a', encoding='utf-8') as f:
+        f.write(message + '\n')
 
 
 # 1. Source Documents → Text Chunks
@@ -26,7 +33,7 @@ def split_documents_into_chunks(documents, chunk_size=600, overlap_size=100):
 def extract_elements_from_chunks(chunks):
     elements = []
     for index, chunk in enumerate(chunks):
-        print(f"Chunk index {index} of {len(chunks)}:")
+        log_output(f"Chunk index {index} of {len(chunks)}:")
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -34,7 +41,7 @@ def extract_elements_from_chunks(chunks):
                 {"role": "user", "content": chunk}
             ]
         )
-        print(response.choices[0].message.content)
+        log_output(response.choices[0].message.content)
         entities_and_relations = response.choices[0].message.content
         elements.append(entities_and_relations)
     return elements
@@ -44,7 +51,7 @@ def extract_elements_from_chunks(chunks):
 def summarize_elements(elements):
     summaries = []
     for index, element in enumerate(elements):
-        print(f"Element index {index} of {len(elements)}:")
+        log_output(f"Element index {index} of {len(elements)}:")
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -52,7 +59,7 @@ def summarize_elements(elements):
                 {"role": "user", "content": element}
             ]
         )
-        print("Element summary:", response.choices[0].message.content)
+        log_output("Element summary:", response.choices[0].message.content)
         summary = response.choices[0].message.content
         summaries.append(summary)
     return summaries
@@ -62,7 +69,7 @@ def summarize_elements(elements):
 def build_graph_from_summaries(summaries):
     G = nx.Graph()
     for index, summary in enumerate(summaries):
-        print(f"Summary index {index} of {len(summaries)}:")
+        log_output(f"Summary index {index} of {len(summaries)}:")
         lines = summary.split("\n")
         entities_section = False
         relationships_section = False
@@ -98,7 +105,7 @@ def detect_communities(graph):
     communities = []
     index = 0
     for component in nx.connected_components(graph):
-        print(
+        log_output(
             f"Component index {index} of {len(list(nx.connected_components(graph)))}:")
         subgraph = graph.subgraph(component)
         if len(subgraph.nodes) > 1:  # Leiden algorithm requires at least 2 nodes
@@ -107,18 +114,18 @@ def detect_communities(graph):
                 for community in sub_communities.communities:
                     communities.append(list(community))
             except Exception as e:
-                print(f"Error processing community {index}: {e}")
+                log_output(f"Error processing community {index}: {e}")
         else:
             communities.append(list(subgraph.nodes))
         index += 1
-    print("Communities from detect_communities:", communities)
+    log_output("Communities from detect_communities:", communities)
     return communities
 
 
 def summarize_communities(communities, graph):
     community_summaries = []
     for index, community in enumerate(communities):
-        print(f"Summarize Community index {index} of {len(communities)}:")
+        log_output(f"Summarize Community index {index} of {len(communities)}:")
         subgraph = graph.subgraph(community)
         nodes = list(subgraph.nodes)
         edges = list(subgraph.edges(data=True))
@@ -145,7 +152,7 @@ def summarize_communities(communities, graph):
 def generate_answers_from_communities(community_summaries, query):
     intermediate_answers = []
     for index, summary in enumerate(community_summaries):
-        print(f"Summary index {index} of {len(community_summaries)}:")
+        log_output(f"Summary index {index} of {len(community_summaries)}:")
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -153,7 +160,7 @@ def generate_answers_from_communities(community_summaries, query):
                 {"role": "user", "content": f"Query: {query} Summary: {summary}"}
             ]
         )
-        print("Intermediate answer:", response.choices[0].message.content)
+        log_output("Intermediate answer:", response.choices[0].message.content)
         intermediate_answers.append(
             response.choices[0].message.content)
 
@@ -183,10 +190,9 @@ def graph_rag_pipeline(documents, query, chunk_size=600, overlap_size=100):
 
     # Step 4: Build graph and detect communities
     graph = build_graph_from_summaries(summaries)
-    visualize_graph(graph)
     communities = detect_communities(graph)
 
-    print("communities:", communities[0])
+    log_output("communities:", communities[0])
     # Step 5: Summarize communities
     community_summaries = summarize_communities(communities, graph)
 
@@ -194,12 +200,17 @@ def graph_rag_pipeline(documents, query, chunk_size=600, overlap_size=100):
     final_answer = generate_answers_from_communities(
         community_summaries, query)
 
-    return final_answer
+    return final_answer, graph
 
-
-# Example usage
-query = "二階選課抽籤完，三階還可以抽籤嗎？"
-print('Query:', query)
-answer = graph_rag_pipeline(DOCUMENTS, query)
-print('Answer:', answer)
+if __name__ == "__main__":
+    # Example usage
+    query = "二階選課抽籤完，三階還可以抽籤嗎？"
+    log_output('Query:', query)
+    total_time = 0
+    current_time = time.time()
+    answer, graph = graph_rag_pipeline(DOCUMENTS, query)
+    total_time += time.time() - current_time
+    log_output('Total time:', total_time)
+    log_output('Answer:', answer)
+    visualize_graph(graph)
 
