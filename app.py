@@ -59,7 +59,7 @@ def summarize_elements(elements):
                 {"role": "user", "content": element}
             ]
         )
-        log_output("Element summary:", response.choices[0].message.content)
+        log_output(f"Element summary: {response.choices[0].message.content}")
         summary = response.choices[0].message.content
         summaries.append(summary)
     return summaries
@@ -118,7 +118,7 @@ def detect_communities(graph):
         else:
             communities.append(list(subgraph.nodes))
         index += 1
-    log_output("Communities from detect_communities:", communities)
+    log_output(f"Communities from detect_communities: {communities}")
     return communities
 
 
@@ -160,7 +160,7 @@ def generate_answers_from_communities(community_summaries, query):
                 {"role": "user", "content": f"Query: {query} Summary: {summary}"}
             ]
         )
-        log_output("Intermediate answer:", response.choices[0].message.content)
+        log_output(f"Intermediate answer: {response.choices[0].message.content}")
         intermediate_answers.append(
             response.choices[0].message.content)
 
@@ -192,7 +192,7 @@ def graph_rag_pipeline(documents, query, chunk_size=600, overlap_size=100):
     graph = build_graph_from_summaries(summaries)
     communities = detect_communities(graph)
 
-    log_output("communities:", communities[0])
+    log_output(f"communities: {communities[0]}")
     # Step 5: Summarize communities
     community_summaries = summarize_communities(communities, graph)
 
