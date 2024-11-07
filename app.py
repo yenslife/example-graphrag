@@ -27,7 +27,7 @@ def extract_elements_from_chunks(chunks):
     for index, chunk in enumerate(chunks):
         print(f"Chunk index {index} of {len(chunks)}:")
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Extract entities and relationships from the following text."},
                 {"role": "user", "content": chunk}
@@ -45,7 +45,7 @@ def summarize_elements(elements):
     for index, element in enumerate(elements):
         print(f"Element index {index} of {len(elements)}:")
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Summarize the following entities and relationships in a structured format. Use \"->\" to represent relationships, after the \"Relationships:\" word."},
                 {"role": "user", "content": element}
@@ -129,7 +129,7 @@ def summarize_communities(communities, graph):
         description += ", ".join(relationships)
 
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Summarize the following community of entities and relationships."},
                 {"role": "user", "content": description}
@@ -146,7 +146,7 @@ def generate_answers_from_communities(community_summaries, query):
     for index, summary in enumerate(community_summaries):
         print(f"Summary index {index} of {len(community_summaries)}:")
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Answer the following query based on the provided summary."},
                 {"role": "user", "content": f"Query: {query} Summary: {summary}"}
@@ -157,7 +157,7 @@ def generate_answers_from_communities(community_summaries, query):
             response.choices[0].message.content)
 
     final_response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system",
                 "content": "Combine these answers into a final, concise response."},
@@ -197,7 +197,8 @@ def graph_rag_pipeline(documents, query, chunk_size=600, overlap_size=100):
 
 
 # Example usage
-query = "What are the main themes in these documents?"
+query = "二階選課抽籤完，三階還可以抽籤嗎？"
 print('Query:', query)
 answer = graph_rag_pipeline(DOCUMENTS, query)
 print('Answer:', answer)
+
