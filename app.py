@@ -4,6 +4,7 @@ from cdlib import algorithms
 import os
 from dotenv import load_dotenv
 from constants import DOCUMENTS
+from graph_vis import visualize_graph
 
 load_dotenv()
 
@@ -182,7 +183,7 @@ def graph_rag_pipeline(documents, query, chunk_size=600, overlap_size=100):
 
     # Step 4: Build graph and detect communities
     graph = build_graph_from_summaries(summaries)
-    print("graph:", graph)
+    visualize_graph(graph)
     communities = detect_communities(graph)
 
     print("communities:", communities[0])
