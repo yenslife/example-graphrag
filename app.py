@@ -204,13 +204,13 @@ def graph_rag_pipeline(documents, query, chunk_size=600, overlap_size=100):
 
 if __name__ == "__main__":
     # Example usage
-    query = "二階選課抽籤完，三階還可以抽籤嗎？"
-    log_output('Query:', query)
+    query = "學士班英文模組課程（A1, 序號101~500）於哪個階段登記志願抽籤？"
+    log_output(f'Query: {query}')
     total_time = 0
     current_time = time.time()
     answer, graph = graph_rag_pipeline(DOCUMENTS, query)
     total_time += time.time() - current_time
-    log_output('Total time:', total_time)
-    log_output('Answer:', answer)
+    log_output(f'Total time: {total_time}')
+    log_output(f'Answer: {answer}')
     visualize_graph(graph)
 
