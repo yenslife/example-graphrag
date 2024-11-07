@@ -168,7 +168,7 @@ def generate_answers_from_communities(community_summaries, query):
         model="gpt-4o-mini",
         messages=[
             {"role": "system",
-                "content": "Combine these answers into a final, concise response."},
+                "content": "Combine these answers into a final, concise response. 使用**繁體中文**"},
             {"role": "user", "content": f"Intermediate answers: {intermediate_answers}"}
         ]
     )
